@@ -7,10 +7,14 @@ const app = express();
 const port = process.env.PORT || 5000;
 
 // midleware 
-app.use(cors());
-app.use(express.json())
+app.use(cors({
+  origin: [
+    'http://localhost:5173'
+  ],
+  credentials: true
+}));app.use(express.json())
 
-console.log(process.env);
+// console.log(process.env);
 
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.vheow1k.mongodb.net/?retryWrites=true&w=majority`;
@@ -48,6 +52,12 @@ async function run() {
       res.send(result)
     })
 
+    app.post('/users' ,async(req, res) => {
+      const newUser = req.body;
+      const result = await userCollection.insertOne(newUser);
+      res.send(result)
+    })
+
     app.post('/allFoods' ,async(req, res) => {
       const newFood = req.body;
       const result = await foodCollection.insertOne(newFood);
@@ -60,13 +70,58 @@ async function run() {
       res.send(result)
     })
 
-    app.post('/users' ,async(req, res) => {
-      const newUser = req.body;
-      const result = await userCollection.insertOne(newUser);
-      res.send(result)
+
+    app.get('/carts',  async (req, res) => {
+      // console.log(req.query.email);
+      let query = {};
+      if (req.query?.email) {
+        query = { userEmail: req.query.email }
+      }
+      const result = await cartCollection.find(query).toArray();
+      res.send(result);
     })
 
 
+    app.get('/allFoodsbyEmail',  async (req, res) => {
+      // console.log(req.query.email);
+      let query = {};
+      if (req.query?.email) {
+        query = { MadeBy: req.query.email }
+      }
+      const result = await foodCollection.find(query).toArray();
+      res.send(result);
+    })
+
+
+    app.delete('/carts/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) }
+      const result = await cartCollection.deleteOne(query);
+      res.send(result);
+    })
+
+    app.put('/allFoods/:id', async(req,res) => {
+      const id = req.params.id;
+      console.log(id);
+      const filter = {_id : new ObjectId(id)}
+      const options = { upsert : true};
+      const updatedFood = req.body;
+      const Food = {
+        $set:{
+          name: updatedFood.Name,
+          Category : updatedFood.Category,
+          Quantity: updatedFood.Quantity,
+          Price : updatedFood.Price,
+          FoodOrigin: updatedFood.FoodOrigin,
+          Description : updatedFood.Description,
+          Image: updatedFood.Image,
+          Count: updatedFood.Count,
+          MadeBy: updatedFood.MadeBy
+        }
+      }
+      const result = await foodCollection.updateOne(filter,Food, options);
+      res.send(result);
+    })
 
 
 
