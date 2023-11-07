@@ -40,10 +40,22 @@ async function run() {
 
 
     // Api 
+    //http://localhost:5000/allFoods?sortField=Count&sortOrder=desc
+
     app.get('/allFoods' , async(req, res) => {
-        const allFoods = await foodCollection.find().toArray()
+
+      let sortObj = {}
+      const sortField = req.query.sortField;
+      const sortOrder = req.query.sortOrder;
+
+      if(sortField && sortOrder) {
+        sortObj[sortField] = sortOrder
+      }
+        const allFoods = await foodCollection.find().sort(sortObj).toArray()
         res.send(allFoods)
     })
+
+
 
     app.get('/allFoods/:id', async (req, res) => {
       const id = req.params.id;
@@ -93,7 +105,6 @@ async function run() {
 
     app.put('/allFoods/:id', async(req,res) => {
       const id = req.params.id;
-      console.log(id);
       const filter = {_id : new ObjectId(id)}
       const options = { upsert : true};
       const updatedFood = req.body;
@@ -110,22 +121,19 @@ async function run() {
           MadeBy: updatedFood.MadeBy
         }
       }
-      const result = await foodCollection.updateOne(filter,Food, options);
+      const result = await foodCollection.updateOne(filter, Food, options);
       res.send(result);
     })
 
     app.patch('/allFoods/:id' , async(req, res) => {
       const id = req.params.id;
-      console.log(id);
       const filter = {_id : new ObjectId(id)}
       const options = {upsert : true}
       const updatedFood = req.body;
-      console.log(updatedFood);
       const countFood = {
         $set:{
           Count: updatedFood.Count,
           Quantity: updatedFood.Quantity
-
         }
       }
       const result = await foodCollection.updateOne(filter, countFood, options);
