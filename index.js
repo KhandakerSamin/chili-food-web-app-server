@@ -33,13 +33,13 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     // await client.connect();
 
-    //food database 
+    //database 
     const foodCollection = client.db('ChiliFoodDB').collection('FoodDB');
     const cartCollection = client.db('ChiliFoodDB').collection('CartDB');
     const userCollection = client.db('ChiliFoodDB').collection('UserDB');
 
 
-    //api for Foods 
+    // Api 
     app.get('/allFoods' , async(req, res) => {
         const allFoods = await foodCollection.find().toArray()
         res.send(allFoods)
@@ -72,7 +72,6 @@ async function run() {
 
 
     app.get('/carts',  async (req, res) => {
-      // console.log(req.query.email);
       let query = {};
       if (req.query?.email) {
         query = { userEmail: req.query.email }
@@ -89,14 +88,6 @@ async function run() {
         query = { MadeBy: req.query.email }
       }
       const result = await foodCollection.find(query).toArray();
-      res.send(result);
-    })
-
-
-    app.delete('/carts/:id', async (req, res) => {
-      const id = req.params.id;
-      const query = { _id: new ObjectId(id) }
-      const result = await cartCollection.deleteOne(query);
       res.send(result);
     })
 
@@ -123,6 +114,32 @@ async function run() {
       res.send(result);
     })
 
+    app.patch('/allFoods/:id' , async(req, res) => {
+      const id = req.params.id;
+      console.log(id);
+      const filter = {_id : new ObjectId(id)}
+      const options = {upsert : true}
+      const updatedFood = req.body;
+      console.log(updatedFood);
+      const countFood = {
+        $set:{
+          Count: updatedFood.Count,
+          Quantity: updatedFood.Quantity
+
+        }
+      }
+      const result = await foodCollection.updateOne(filter, countFood, options);
+      res.send(result);
+    })
+
+
+    app.delete('/carts/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) }
+      const result = await cartCollection.deleteOne(query);
+      res.send(result);
+    })
+
 
 
     // Send a ping to confirm a successful connection
@@ -134,8 +151,6 @@ async function run() {
   }
 }
 run().catch(console.dir);
-
-
 
 
 app.get('/', (req, res) => {
