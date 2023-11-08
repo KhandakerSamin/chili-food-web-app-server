@@ -9,7 +9,8 @@ const port = process.env.PORT || 5000;
 // midleware 
 app.use(cors({
   origin: [
-    'http://localhost:5173'
+    'http://localhost:5173',
+    'http://localhost:5174'
   ],
   credentials: true
 }));app.use(express.json())
@@ -110,7 +111,7 @@ async function run() {
       const updatedFood = req.body;
       const Food = {
         $set:{
-          name: updatedFood.Name,
+          Name: updatedFood.Name,
           Category : updatedFood.Category,
           Quantity: updatedFood.Quantity,
           Price : updatedFood.Price,
