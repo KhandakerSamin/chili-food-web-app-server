@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const jwt = require('jsonwebtoken')
 require('dotenv').config()
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
@@ -14,8 +15,6 @@ app.use(cors({
   ],
   credentials: true
 }));app.use(express.json())
-
-// console.log(process.env);
 
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.vheow1k.mongodb.net/?retryWrites=true&w=majority`;
@@ -39,10 +38,20 @@ async function run() {
     const cartCollection = client.db('ChiliFoodDB').collection('CartDB');
     const userCollection = client.db('ChiliFoodDB').collection('UserDB');
 
+    
 
-    // Api 
-    //http://localhost:5000/allFoods?sortField=Count&sortOrder=desc
+    // Auth Related API
 
+    app.post('/jwt', async(req, res ) => {
+        const user = req.body;
+        console.log("user for token", user);
+        const token = jwt.sign(user,process.env.ACCESS_TOKEN_SECRET,{exprieIn:'1h'})
+    } )
+    
+    
+    
+    // Data related API 
+    
     app.get('/allFoods' , async(req, res) => {
 
       let sortObj = {}
@@ -55,8 +64,6 @@ async function run() {
         const allFoods = await foodCollection.find().sort(sortObj).toArray()
         res.send(allFoods)
     })
-
-
 
     app.get('/allFoods/:id', async (req, res) => {
       const id = req.params.id;
@@ -103,6 +110,7 @@ async function run() {
       const result = await foodCollection.find(query).toArray();
       res.send(result);
     })
+
 
     app.put('/allFoods/:id', async(req,res) => {
       const id = req.params.id;
