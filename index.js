@@ -12,10 +12,13 @@ const port = process.env.PORT || 5000;
 app.use(cors({
   origin: [
     'http://localhost:5173',
-    'http://localhost:5174'
+    'http://localhost:5174',
+    'https://chili-food.web.app',
+    'https://chili-food.firebaseapp.com'
   ],
   credentials: true
-})); app.use(express.json())
+}));
+app.use(express.json())
 app.use(cookieParser())
 
 
@@ -74,9 +77,10 @@ async function run() {
 
       res.cookie('token', token, {
         httpOnly: true,
-        secure: false
-      })
-        .send({ success: true })
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
+
+      }).send({ success: true })
     })
 
     app.post('/logout', async (req, res) => {
@@ -113,6 +117,7 @@ async function run() {
       res.send(result)
     })
 
+
     app.post('/allFoods', async (req, res) => {
       const newFood = req.body;
       const result = await foodCollection.insertOne(newFood);
@@ -127,8 +132,8 @@ async function run() {
 
     app.get('/carts', logger, verifyToken, async (req, res) => {
       console.log('token owner info', req.user);
-      if(req.user.email !== req.query.email){
-        return res.status(403).send({messege : 'forbidden access'})
+      if (req.user.email !== req.query.email) {
+        return res.status(403).send({ messege: 'forbidden access' })
       }
       let query = {};
       if (req.query?.email) {
@@ -138,7 +143,7 @@ async function run() {
       res.send(result);
     })
 
-    app.get('/allFoodsbyEmail', async (req, res) => {
+    app.get('/allFoodsbyEmail', logger, verifyToken, async (req, res) => {
       // console.log(req.query.email);
       let query = {};
       if (req.query?.email) {
@@ -194,8 +199,8 @@ async function run() {
 
 
     // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
+    // await client.db("admin").command({ ping: 1 });
+    // console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
