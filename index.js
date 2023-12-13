@@ -67,6 +67,7 @@ async function run() {
     const foodCollection = client.db('ChiliFoodDB').collection('FoodDB');
     const cartCollection = client.db('ChiliFoodDB').collection('CartDB');
     const userCollection = client.db('ChiliFoodDB').collection('UserDB');
+    const tableCollection = client.db('ChiliFoodDB').collection('TableDB');
 
     // Auth Related API
 
@@ -130,6 +131,12 @@ async function run() {
       res.send(result)
     })
 
+    app.post('/tableBookings', async (req, res) => {
+      const newTable = req.body;
+      const result = await tableCollection.insertOne(newTable);
+      res.send(result)
+    })
+
     app.get('/carts', logger, verifyToken, async (req, res) => {
       console.log('token owner info', req.user);
       if (req.user.email !== req.query.email) {
@@ -142,6 +149,21 @@ async function run() {
       const result = await cartCollection.find(query).toArray();
       res.send(result);
     })
+
+    app.get('/tableBookings/:email', async (req, res) => {
+      const userEmailFromParam = req.params.email;
+      const userEmailFromAuth = req.user?.email;
+      try {
+        const query = { userEmail: userEmailFromParam };
+        const result = await tableCollection.find(query).toArray();
+        res.send(result);
+      } catch (error) {
+        console.error(error);
+        res.status(500).send('Internal Server Error');
+      }
+    });
+    
+    
 
     app.get('/allFoodsbyEmail', logger, verifyToken, async (req, res) => {
       // console.log(req.query.email);
